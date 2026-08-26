@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+data/
+playwright-report/
+test-results/
+*.tgz
+*.tsbuildinfo
+release/
+.DS_Store
+Thumbs.db

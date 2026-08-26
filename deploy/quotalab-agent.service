@@ -1,0 +1,16 @@
+[Unit]
+Description=QuotaLab privacy-safe Codex quota collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/codex-quota-lab/apps/agent/dist/cli.js daemon
+WorkingDirectory=/opt/codex-quota-lab
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

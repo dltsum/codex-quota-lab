@@ -1,0 +1,4 @@
+{$QUOTALAB_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy quotalab:4317
+}
