@@ -56,3 +56,19 @@ Append-only. Times use Asia/Shanghai unless noted.
   deployed-server/dashboard smoke check, Agent single-file execution, and the
   production dependency audit. Docker runtime verification is delegated to the
   checked-in Linux CI job because Docker is unavailable on this workstation.
+
+## 2026-08-27 - remote CI correction
+
+- Created the private `dltsum/codex-quota-lab` repository and pushed the first
+  clean commit. The initial remote run passed the container build and Chromium
+  E2E jobs, while Ubuntu exposed an ordering-dependent packaging failure.
+- Traced the failure to legacy production deployment changing the active
+  workspace dependency state before the Agent packager ran. The deployed server
+  itself had passed its health and dashboard checks.
+- Isolated deployment in a minimal temporary workspace containing only the
+  server, contracts, lockfile, and workspace manifests. The temporary root is
+  removed after the test, so deployment pruning cannot mutate the source
+  workspace.
+- Re-ran the exact failed sequence locally: deployed-server smoke, single-file
+  Agent packaging, and packaged CLI startup all pass with development
+  dependencies still present.

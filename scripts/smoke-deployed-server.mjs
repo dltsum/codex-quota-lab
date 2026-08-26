@@ -1,6 +1,6 @@
 import { execFile as execFileCallback, spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
+import { copyFile, cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -27,7 +27,8 @@ const reservePort = async () =>
     });
   });
 
-const deployedServer = await mkdtemp(join(tmpdir(), "quotalab-deploy-smoke-"));
+const stagingRoot = await mkdtemp(join(tmpdir(), "quotalab-deploy-smoke-"));
+const deployedServer = join(stagingRoot, "server");
 let child;
 try {
   const commandEnvironment = { ...process.env, CI: "true" };
@@ -36,10 +37,25 @@ try {
     env: commandEnvironment,
     windowsHide: true,
   });
+
+  for (const file of ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"]) {
+    await copyFile(resolve(root, file), resolve(stagingRoot, file));
+  }
+  for (const packagePath of ["apps/server", "packages/contracts"]) {
+    const stagedPackage = resolve(stagingRoot, packagePath);
+    await mkdir(stagedPackage, { recursive: true });
+    await copyFile(
+      resolve(root, packagePath, "package.json"),
+      resolve(stagedPackage, "package.json"),
+    );
+    await cp(resolve(root, packagePath, "dist"), resolve(stagedPackage, "dist"), {
+      recursive: true,
+    });
+  }
   await execFile(
     process.execPath,
     [pnpmCli, "--filter", "@quotalab/server", "deploy", "--prod", "--legacy", deployedServer],
-    { cwd: root, env: commandEnvironment, windowsHide: true },
+    { cwd: stagingRoot, env: commandEnvironment, windowsHide: true },
   );
 
   const port = await reservePort();
@@ -88,5 +104,5 @@ try {
     await Promise.race([once(child, "exit"), delay(3_000)]);
     if (child.exitCode === null) child.kill("SIGKILL");
   }
-  await rm(deployedServer, { recursive: true, force: true });
+  await rm(stagingRoot, { recursive: true, force: true });
 }
