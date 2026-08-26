@@ -1,10 +1,10 @@
 # QuotaLab implementation plan
 
-Status: delivery verification
+Status: completed
 
 Project: QuotaLab for Codex
 
-Repository: `codex-quota-lab`
+Repository: [dltsum/codex-quota-lab](https://github.com/dltsum/codex-quota-lab)
 
 ## Objective
 
@@ -63,7 +63,7 @@ changes it.
 - [x] Missing/unattributed data and confidence are visible.
 - [x] CSV export contains aggregates only.
 - [x] Lint, typecheck, unit, integration, production build, and browser E2E pass.
-- [ ] Clean commit is pushed to GitHub without secrets or generated databases.
+- [x] Clean commit is pushed to GitHub without secrets or generated databases.
 
 ## Milestones
 
@@ -72,4 +72,4 @@ changes it.
 3. Server, database, authentication, and attribution engine — completed 2026-08-27.
 4. Device agent and Codex collectors — completed 2026-08-27.
 5. Dashboard and drill-down experience — completed 2026-08-27.
-6. Verification, security review, documentation, commit, and GitHub delivery — in progress.
+6. Verification, security review, documentation, commit, and GitHub delivery — completed 2026-08-27.
