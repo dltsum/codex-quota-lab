@@ -1,17 +1,29 @@
-import type { QuotaLimitSummary } from "@quotalab/contracts";
+import type {
+  AttributionConfidence,
+  QuotaAllocation,
+  QuotaLimitSummary,
+} from "@quotalab/contracts";
 
 import { formatCountdown, limitLabel } from "../format";
+import { buildQuotaAllocationSegments } from "../quota-allocation";
 
 interface QuotaHorizonProps {
   limits: QuotaLimitSummary[];
   focusKey: string | null;
+  allocations: QuotaAllocation[];
   onFocus: (key: string) => void;
 }
 
 const ringRadius = [132, 109, 86, 67];
 const ringColors = ["var(--cobalt)", "var(--mint-strong)", "var(--violet)", "var(--coral)"];
+const confidenceLabels: Record<AttributionConfidence, string> = {
+  high: "高置信度估算",
+  medium: "并发 · 中置信度",
+  low: "低置信度估算",
+  unattributed: "未归因",
+};
 
-export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) => {
+export const QuotaHorizon = ({ limits, focusKey, allocations, onFocus }: QuotaHorizonProps) => {
   const focused = limits.find((limit) => limit.key === focusKey) ?? limits[0];
   const rings = limits.slice(0, 4);
 
@@ -34,6 +46,11 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
     );
   }
 
+  const allocationSegments = buildQuotaAllocationSegments(allocations, focused.usedPercent);
+  const allocationDescription = allocationSegments
+    .map((segment) => `${segment.label} ${segment.percentagePoints.toFixed(1)}%`)
+    .join("，");
+
   return (
     <section className="horizon-plate" data-testid="quota-horizon">
       <div className="plate-heading">
@@ -41,7 +58,10 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
           <span className="plate-index">02 / OFFICIAL QUOTA</span>
           <h2>额度地平线</h2>
         </div>
-        <span className="evidence-chip evidence-chip--official">官方读数</span>
+        <div className="evidence-chip-set">
+          <span className="evidence-chip evidence-chip--official">总值 · 官方</span>
+          <span className="evidence-chip evidence-chip--estimated">设备分段 · 估算</span>
+        </div>
       </div>
 
       <div className="horizon-body">
@@ -50,7 +70,7 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
             <title id="horizon-title">Codex 官方额度使用比例</title>
             <desc id="horizon-description">
               当前选中窗口已使用 {focused.usedPercent.toFixed(1)}%，剩余{" "}
-              {focused.remainingPercent.toFixed(1)}%。
+              {focused.remainingPercent.toFixed(1)}%。设备估算构成为：{allocationDescription}。
             </desc>
             <g transform="rotate(-90 160 160)">
               {rings.map((limit, index) => {
@@ -58,6 +78,7 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
                 const circumference = Math.PI * 2 * radius;
                 const dash = (circumference * limit.usedPercent) / 100;
                 const isFocused = limit.key === focused.key;
+                const showAllocation = isFocused && allocationSegments.length > 0;
                 return (
                   <g key={limit.key}>
                     <circle
@@ -68,21 +89,45 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
                       r={radius}
                       strokeWidth={isFocused ? 13 : 9}
                     />
-                    <circle
-                      className="horizon-value"
-                      cx="160"
-                      cy="160"
-                      fill="none"
-                      r={radius}
-                      stroke={ringColors[index]}
-                      strokeDasharray={`${dash} ${Math.max(0, circumference - dash)}`}
-                      strokeWidth={isFocused ? 13 : 9}
-                    />
+                    {showAllocation ? (
+                      allocationSegments.map((segment) => {
+                        const segmentLength = (circumference * segment.percentagePoints) / 100;
+                        const segmentOffset = -(circumference * segment.startPercent) / 100;
+                        return (
+                          <circle
+                            aria-label={`${segment.label}，估算占周期额度 ${segment.percentagePoints.toFixed(1)}%`}
+                            className="horizon-allocation-segment"
+                            cx="160"
+                            cy="160"
+                            data-percentage={segment.percentagePoints}
+                            data-testid={`quota-segment-${segment.deviceId ?? "unattributed"}`}
+                            fill="none"
+                            key={segment.deviceId ?? "unattributed"}
+                            r={radius}
+                            stroke={segment.color}
+                            strokeDasharray={`${segmentLength} ${Math.max(0, circumference - segmentLength)}`}
+                            strokeDashoffset={segmentOffset}
+                            strokeWidth={13}
+                          />
+                        );
+                      })
+                    ) : (
+                      <circle
+                        className="horizon-value"
+                        cx="160"
+                        cy="160"
+                        fill="none"
+                        r={radius}
+                        stroke={ringColors[index]}
+                        strokeDasharray={`${dash} ${Math.max(0, circumference - dash)}`}
+                        strokeWidth={isFocused ? 13 : 9}
+                      />
+                    )}
                     <circle
                       cx="160"
                       cy={160 - radius}
                       r={isFocused ? 5 : 3.5}
-                      fill={ringColors[index]}
+                      fill={showAllocation ? allocationSegments[0]!.color : ringColors[index]}
                     />
                   </g>
                 );
@@ -90,12 +135,15 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
             </g>
           </svg>
           <div className="horizon-center" aria-hidden="true">
-            <span>剩余</span>
+            <span>官方已用</span>
             <strong>
-              {focused.remainingPercent.toFixed(1)}
+              {focused.usedPercent.toFixed(1)}
               <small>%</small>
             </strong>
-            <i>{formatCountdown(focused.resetsAt)}</i>
+            <i>
+              <span>剩余 {focused.remainingPercent.toFixed(1)}%</span>
+              <span>{formatCountdown(focused.resetsAt)}</span>
+            </i>
           </div>
         </div>
 
@@ -121,6 +169,44 @@ export const QuotaHorizon = ({ limits, focusKey, onFocus }: QuotaHorizonProps) =
               </span>
             </button>
           ))}
+          <div
+            aria-label={`官方已用 ${focused.usedPercent.toFixed(1)}%。设备估算：${allocationDescription}`}
+            className="quota-allocation"
+            data-testid="quota-allocation-breakdown"
+            role="group"
+          >
+            <div className="quota-allocation__heading">
+              <span>当前已用构成</span>
+              <strong>{focused.usedPercent.toFixed(1)}% 官方总值</strong>
+            </div>
+            <div className="quota-allocation__meter" aria-hidden="true">
+              {allocationSegments.map((segment) => (
+                <i
+                  key={segment.deviceId ?? "unattributed"}
+                  style={{ background: segment.color, width: `${segment.percentagePoints}%` }}
+                />
+              ))}
+            </div>
+            <ul>
+              {allocationSegments.map((segment) => (
+                <li key={segment.deviceId ?? "unattributed"}>
+                  <span
+                    className="quota-allocation__swatch"
+                    style={{ background: segment.color }}
+                  />
+                  <span className="quota-allocation__device">
+                    <strong>{segment.label}</strong>
+                    <small>{confidenceLabels[segment.confidence]}</small>
+                  </span>
+                  <strong className="quota-allocation__value">
+                    {segment.percentagePoints.toFixed(1)}
+                    <small>%</small>
+                  </strong>
+                </li>
+              ))}
+            </ul>
+            <p>设备数字为整个周期额度的估算百分比，分段合计对应官方已用值。</p>
+          </div>
           <p className="window-observed">
             最近采样：{new Date(focused.observedAt).toLocaleString("zh-CN", { hour12: false })}
           </p>

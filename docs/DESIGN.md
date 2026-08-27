@@ -27,7 +27,7 @@ Candidate A — instrument bench (selected):
 ```text
 + device rail +---------- quota horizon ----------------+ sync / confidence +
 | device       |      concentric official windows       | data quality       |
-| device       |     remaining time inside the dial     | next reset         |
+| device       | focused used ring = device estimates   | next reset         |
 +--------------+-----------------------------------------+--------------------+
 | device share | model mix | effort mix | purpose mix | launch surfaces      |
 +----------------------------------------------------------------------------+
@@ -41,10 +41,15 @@ table fallback rather than the main composition.
 
 ## Signature
 
-The **quota horizon** is a large two-ring time instrument: ring length is the
-official used percentage, a moving marker shows time until reset, and its center
-states the remaining percentage in plain language. It is not decorative; it
-keeps the two facts the user actually controls in one glance.
+The **quota horizon** is a large concentric time instrument. The focused ring's
+total length and center number are the official used percentage, while colored
+subsegments directly encode each device's estimated percentage of the complete
+quota cycle. An adjacent ruled ledger repeats those percentages with confidence
+and unattributed labels. Other rings remain compact official window traces, and
+the center keeps remaining quota and reset time in two deliberate lines. It is
+not decorative: it makes the official total and its estimated device
+explanation readable in one glance without presenting the explanation as an
+official per-device bill.
 
 ## Self-critique before build
 

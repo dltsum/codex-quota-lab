@@ -75,3 +75,20 @@ Append-only. Times use Asia/Shanghai unless noted.
 - GitHub Actions run `33009779361` passed on implementation commit `e7f6061`:
   Ubuntu verification, Windows verification, Chromium E2E, and the Docker
   container build all completed successfully.
+
+## 2026-08-27 - direct percentage allocation
+
+- Registered the clarified requirement that concurrent-device estimates must
+  appear directly inside the selected official cycle-percentage display, not
+  only in a separate device chart or detail view.
+- Reused the existing server `allocations` response without adding another
+  state or attribution method. The focused official used ring is now composed
+  of device-colored estimated percentage segments; its center remains the
+  explicitly official total.
+- Added an in-card allocation ruler and device ledger with full-cycle
+  percentages, confidence labels, and a visible unattributed fallback. The
+  separate global device-share chart remains available for comparison.
+- Added three numeric visual-allocation tests and expanded Chromium E2E to
+  assert `18.4% + 16.4% = 34.8%` in the main quota instrument. Desktop and
+  mobile screenshots were inspected; the center reset text was split into two
+  stable lines after that review. The local unit/integration total is now 33.

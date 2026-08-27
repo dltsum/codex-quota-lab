@@ -59,6 +59,8 @@ changes it.
       JSONL without uploading content or double-counting events.
 - [x] CLI, IDE, desktop, cloud, subagent, and unknown source mappings are tested.
 - [x] Official quota values remain distinct from estimates end to end.
+- [x] The selected official used percentage directly contains per-device
+      estimated segments, confidence labels, and any unattributed remainder.
 - [x] All requested global and per-device visual breakdowns render.
 - [x] Missing/unattributed data and confidence are visible.
 - [x] CSV export contains aggregates only.

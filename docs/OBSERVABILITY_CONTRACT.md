@@ -53,6 +53,12 @@ local activity observed in the same interval.
 The user interface must never remove these labels or combine official and
 estimated values under one unqualified number.
 
+The selected quota window renders its official used percentage as one complete
+instrument whose colored subsegments are the current per-device estimates.
+Each segment is labelled as an estimated percentage of the full quota cycle,
+with confidence shown beside the device. The center total remains explicitly
+official, and unexplained usage remains a visible unattributed segment.
+
 ## Launch-surface coverage
 
 QuotaLab does not wrap a launch command. The agent runs independently, so the

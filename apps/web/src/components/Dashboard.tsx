@@ -2,6 +2,7 @@ import type { BreakdownEntry, DashboardResponse } from "@quotalab/contracts";
 import { useMemo, useState } from "react";
 
 import { formatTokens } from "../format";
+import { quotaAllocationColor } from "../quota-allocation";
 import { DeviceDrawer } from "./DeviceDrawer";
 import { DeviceRail } from "./DeviceRail";
 import { DonutPanel, type DonutDatum } from "./DonutPanel";
@@ -33,8 +34,6 @@ const toDonut = (entries: BreakdownEntry[], attributedPoints?: number): DonutDat
         : `${((attributedPoints * entry.percent) / 100).toFixed(2)} pp`,
   }));
 
-const DEVICE_COLORS = ["#3157ff", "#8fd5c1", "#8c6cff", "#e8b44b", "#59758f", "#ff6b52"];
-
 export const Dashboard = ({
   data,
   refreshing,
@@ -56,8 +55,7 @@ export const Dashboard = ({
         value: allocation.percentagePoints,
         displayValue: `${allocation.percentagePoints.toFixed(2)} pp`,
         legendValue: `${allocation.percentagePoints.toFixed(2)} pp`,
-        color:
-          allocation.deviceId === null ? "#ff6b52" : DEVICE_COLORS[index % DEVICE_COLORS.length],
+        color: quotaAllocationColor(allocation, index),
       })),
     [data.allocations],
   );
@@ -118,6 +116,7 @@ export const Dashboard = ({
           <QuotaHorizon
             limits={data.limits}
             focusKey={data.focusLimitKey}
+            allocations={data.allocations}
             onFocus={(key) => void onFocusLimit(key)}
           />
           <QualityPlate quality={data.dataQuality} focus={focus} generatedAt={data.generatedAt} />

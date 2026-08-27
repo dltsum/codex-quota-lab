@@ -267,7 +267,19 @@ test("完整群组流程：登录、全局图表、设备明细、改名与导�
   await expect(page.getByTestId("global-breakdowns")).toContainText("推理强度");
   await expect(page.getByTestId("global-breakdowns")).toContainText("用途粗分类");
   await expect(page.getByTestId("quota-horizon")).toContainText("34.8%");
-  await expect(page.getByText("官方读数")).toBeVisible();
+  await expect(page.getByTestId("quota-allocation-breakdown")).toContainText("34.8% 官方总值");
+  await expect(page.getByTestId("quota-allocation-breakdown")).toContainText("家中笔记本");
+  await expect(page.getByTestId("quota-allocation-breakdown")).toContainText("10.0.0.9");
+  await expect(page.getByTestId(`quota-segment-${home.device.id}`)).toHaveAttribute(
+    "data-percentage",
+    "16.4",
+  );
+  await expect(page.getByTestId(`quota-segment-${lab.device.id}`)).toHaveAttribute(
+    "data-percentage",
+    "18.4",
+  );
+  await expect(page.getByText("总值 · 官方")).toBeVisible();
+  await expect(page.getByText("设备分段 · 估算")).toBeVisible();
   await expect(page.getByText("本地 + 估算").first()).toBeVisible();
   await expect(page.getByTestId("global-breakdowns")).toContainText("pp");
 
@@ -293,4 +305,7 @@ test("完整群组流程：登录、全局图表、设备明细、改名与导�
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByTestId("quota-horizon")).toBeVisible();
   await page.screenshot({ path: "test-results/dashboard-mobile.png", fullPage: false });
+  await page
+    .getByTestId("quota-horizon")
+    .screenshot({ path: "test-results/dashboard-mobile-quota.png" });
 });
