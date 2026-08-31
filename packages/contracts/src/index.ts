@@ -252,6 +252,7 @@ export interface DeviceSummary {
   softBudgetPercent: number | null;
   tokenTotal: number;
   activeMs: number;
+  activeSharePercent: number;
   estimatedQuotaPercent: number;
   attributionConfidence: AttributionConfidence;
   breakdowns: BreakdownSet;

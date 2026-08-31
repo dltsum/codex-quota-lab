@@ -1,7 +1,7 @@
 import type { BreakdownEntry, DashboardResponse } from "@quotalab/contracts";
 import { useMemo, useState } from "react";
 
-import { formatTokens } from "../format";
+import { formatDuration, formatTokens } from "../format";
 import { quotaAllocationColor } from "../quota-allocation";
 import { DeviceDrawer } from "./DeviceDrawer";
 import { DeviceRail } from "./DeviceRail";
@@ -157,6 +157,41 @@ export const Dashboard = ({
         </section>
 
         <UsageTimeline timeline={data.timeline} accountUsage={data.accountUsage} />
+
+        <section className="surface-ledger" data-testid="device-time-share">
+          <div>
+            <span className="plate-index">DEVICE / TIME SHARE</span>
+            <h2>设备活跃时间占比</h2>
+          </div>
+          <div className="surface-bars">
+            {data.devices.some((device) => device.activeMs > 0) ? (
+              [...data.devices]
+                .sort((a, b) => b.activeMs - a.activeMs)
+                .map((device) => (
+                  <div className="surface-bar surface-bar--time" key={device.id}>
+                    <span>
+                      {device.label}
+                      <small className="device-ip">
+                        {device.privateIp ?? device.publicIp ?? "IP 未知"}
+                      </small>
+                    </span>
+                    <i>
+                      <b style={{ width: `${device.activeSharePercent}%` }} />
+                    </i>
+                    <strong>
+                      {device.activeSharePercent.toFixed(1)}% · {formatDuration(device.activeMs)}
+                    </strong>
+                  </div>
+                ))
+            ) : (
+              <p>还没有本地活跃时间记录。</p>
+            )}
+          </div>
+          <p className="surface-note">
+            按本窗口内各设备本地记录的活跃时长占比排序；IP
+            取设备上报的内网地址，缺失时回退到观察到的公网地址。
+          </p>
+        </section>
 
         <section className="surface-ledger">
           <div>

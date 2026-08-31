@@ -174,6 +174,10 @@ export const DeviceDrawer = ({ deviceId, focusKey, onClose, onUpdated }: DeviceD
                 {detail.device.platform} · Agent {detail.device.agentVersion} ·{" "}
                 {formatRelative(detail.device.lastSeenAt)}
               </p>
+              <p>
+                {detail.device.privateIp ?? detail.device.publicIp ?? "IP 未知"} · 时间占比{" "}
+                {detail.device.activeSharePercent.toFixed(1)}%
+              </p>
             </header>
 
             <div className="drawer-kpis">

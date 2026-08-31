@@ -1511,6 +1511,17 @@ input:focus-visible {
   text-align: right;
 }
 
+.surface-bar--time {
+  grid-template-columns: minmax(120px, 200px) 1fr 108px;
+}
+
+.surface-bar--time .device-ip {
+  display: block;
+  color: var(--graphite);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+}
+
 .surface-bars > p,
 .surface-note {
   margin: 0;

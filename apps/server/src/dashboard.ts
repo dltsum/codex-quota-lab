@@ -155,9 +155,19 @@ export const buildDashboard = (
       .map((entry) => [entry.deviceId!, entry]),
   );
 
+  const activeMsByDevice = new Map<string, number>();
+  for (const sample of usageRows) {
+    activeMsByDevice.set(
+      sample.device_id,
+      (activeMsByDevice.get(sample.device_id) ?? 0) + sample.active_ms,
+    );
+  }
+  const totalActiveMs = [...activeMsByDevice.values()].reduce((sum, value) => sum + value, 0);
+
   const deviceResponses = devices.map<DeviceSummary>((device) => {
     const ownRows = usageRows.filter((sample) => sample.device_id === device.id);
     const allocation = allocationByDevice.get(device.id);
+    const activeMs = activeMsByDevice.get(device.id) ?? 0;
     return {
       id: device.id,
       publicId: device.public_id,
@@ -172,7 +182,9 @@ export const buildDashboard = (
       status: deviceStatus(device.last_seen_at, now),
       softBudgetPercent: device.soft_budget_percent,
       tokenTotal: ownRows.reduce((sum, sample) => sum + sample.total_tokens, 0),
-      activeMs: ownRows.reduce((sum, sample) => sum + sample.active_ms, 0),
+      activeMs,
+      activeSharePercent:
+        totalActiveMs <= 0 ? 0 : Math.round((activeMs / totalActiveMs) * 10_000) / 100,
       estimatedQuotaPercent: allocation?.percentagePoints ?? 0,
       attributionConfidence: allocation?.confidence ?? "low",
       breakdowns: aggregateBreakdowns(aggregateRows, device.id),
@@ -277,6 +289,7 @@ export const dashboardCsv = (dashboard: DashboardResponse): string => {
     "confidence",
     "tokens",
     "active_minutes",
+    "active_share_percent",
     "soft_budget_percent",
     "last_seen_at",
   ];
@@ -290,6 +303,7 @@ export const dashboardCsv = (dashboard: DashboardResponse): string => {
         device.attributionConfidence,
         device.tokenTotal,
         Math.round((device.activeMs / 60_000) * 100) / 100,
+        device.activeSharePercent,
         device.softBudgetPercent,
         device.lastSeenAt,
       ]

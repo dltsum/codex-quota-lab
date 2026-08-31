@@ -30,7 +30,7 @@ const cookieValue = (header: string | string[] | undefined): string => {
   return value.split(";", 1)[0]!;
 };
 
-const usageSlice = (device: string, total: number, startOffset: number) => ({
+const usageSlice = (device: string, total: number, startOffset: number, activeMs = 20_000) => ({
   sampleId: (device === "home" ? "a" : "b").repeat(64),
   sessionKey: (device === "home" ? "c" : "d").repeat(64),
   startedAt: new Date(baseMs + startOffset).toISOString(),
@@ -53,7 +53,7 @@ const usageSlice = (device: string, total: number, startOffset: number) => ({
     tools: 3,
     conversation: 2,
   },
-  activity: { toolCalls: 1, fileChanges: 1, activeMs: 20_000 },
+  activity: { toolCalls: 1, fileChanges: 1, activeMs },
   measurement: "local",
   purposeMethod: "event-envelope-v1",
 });
@@ -96,7 +96,7 @@ const ingestBody = (
     longestStreakDays: 8,
     dailyUsageBuckets: [{ startDate: "2026-08-27", tokens: totalTokens }],
   },
-  usageSlices: [usageSlice(device, totalTokens, 70_000)],
+  usageSlices: [usageSlice(device, totalTokens, 70_000, device === "home" ? 60_000 : 120_000)],
   collector: { appServer: "ok", errorCode: null },
   scanner: {
     filesSeen: 2,
@@ -216,6 +216,11 @@ describe("QuotaLab HTTP integration", () => {
     expect(body.devices.find((device: any) => device.id === home.device.id).label).toContain(
       "192.168.1.8",
     );
+    const homeSummary = body.devices.find((device: any) => device.id === home.device.id);
+    const labSummary = body.devices.find((device: any) => device.id === lab.device.id);
+    expect(homeSummary.activeSharePercent).toBeCloseTo(33.33, 2);
+    expect(labSummary.activeSharePercent).toBeCloseTo(66.67, 2);
+    expect(homeSummary.activeSharePercent + labSummary.activeSharePercent).toBeCloseTo(100, 1);
     expect(body.allocations.every((allocation: any) => allocation.confidence !== "exact")).toBe(
       true,
     );
@@ -249,6 +254,7 @@ describe("QuotaLab HTTP integration", () => {
     expect(exported.statusCode).toBe(200);
     expect(exported.body).toContain("'=HYPERLINK");
     expect(exported.body).not.toMatch(/(?:^|\r\n)=HYPERLINK/);
+    expect(exported.body.split("\r\n", 1)[0]).toContain("active_share_percent");
   });
 
   it("fails closed for private APIs and rejects content-bearing ingestion", async () => {

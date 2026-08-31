@@ -95,3 +95,17 @@ Append-only. Times use Asia/Shanghai unless noted.
 - GitHub Actions run `33045883774` passed on implementation commit `e268c0a`:
   Ubuntu verification, Windows verification, Chromium E2E, and the Docker
   container build all completed successfully.
+
+## 2026-08-30 - device IP time share
+
+- Added `activeSharePercent` to `DeviceSummary`: each device's share of the
+  group-wide locally measured active time within the focused window
+  (0 when no activity exists). Reuses existing `active_ms` samples; no new
+  ingestion state.
+- Dashboard gains a "设备活跃时间占比" section: per-device horizontal bars
+  sorted by active time, labelled with device name plus observed IP
+  (private first, public fallback), share percentage, and duration.
+- Device drawer header now shows the observed IP and the time share.
+- CSV export gains an `active_share_percent` column (aggregates only).
+- Server integration tests assert the 60s/120s two-device split resolves to
+  33.33% / 66.67% and that the CSV header carries the new column.
